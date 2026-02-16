@@ -186,8 +186,8 @@ pub fn crossover_cut_splice(p1: &Cluster, p2: &Cluster, rng: &mut impl Rng) -> O
     apply_random_rotation(&mut p2_atoms, rng);
     
     // 2. Sort by Z
-    p1_atoms.sort_by(|a, b| a.position.z.partial_cmp(&b.position.z).unwrap());
-    p2_atoms.sort_by(|a, b| a.position.z.partial_cmp(&b.position.z).unwrap());
+    p1_atoms.sort_by(|a, b| a.position.z.total_cmp(&b.position.z));
+    p2_atoms.sort_by(|a, b| a.position.z.total_cmp(&b.position.z));
 
     // 3. Cut
     // range 1..n ensures at least 1 atom from P1 and 1 from P2
