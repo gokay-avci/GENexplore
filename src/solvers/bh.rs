@@ -36,8 +36,8 @@ impl BasinHopping {
         let kb_ev = 8.617333262e-5; // Boltzmann constant
         
         // Defensive: Validate inputs
-        if self.params.bh_steps == 0 {
-            let _ = tx.send(SolverEvent::Log("BH steps set to 0. Exiting.".to_string()));
+        if self.params.max_steps == 0 {
+            let _ = tx.send(SolverEvent::Log("Max steps set to 0. Exiting.".to_string()));
             let _ = tx.send(SolverEvent::Finished);
             return;
         }
@@ -78,7 +78,7 @@ impl BasinHopping {
         let mut accepted_count = 0;
 
         // 2. Main Loop
-        for i in 1..=self.params.bh_steps {
+        for i in 1..=self.params.max_steps {
             // A. Perturb
             // Standard BH move: Random translation + slight rotation to escape shallow wells
             let mut trial = Mutator::new()
@@ -158,9 +158,9 @@ impl BasinHopping {
         }
 
         let duration = start_time.elapsed().as_secs_f64();
-        let rate = if duration > 0.0 { self.params.bh_steps as f64 / duration } else { 0.0 };
+        let rate = if duration > 0.0 { self.params.max_steps as f64 / duration } else { 0.0 };
         
-        let _ = tx.send(SolverEvent::Log(format!("BH Finished. Acceptance: {}/{}", accepted_count, self.params.bh_steps)));
+        let _ = tx.send(SolverEvent::Log(format!("BH Finished. Acceptance: {}/{}", accepted_count, self.params.max_steps)));
         let _ = tx.send(SolverEvent::WorkerHeartbeat(rate));
         let _ = tx.send(SolverEvent::Finished);
     }
