@@ -79,9 +79,8 @@ impl GeneticAlgorithm {
                 .collect::<Vec<_>>();
             next_gen.extend(elites);
 
-            // B. Breeding
             if !population.is_empty() {
-                while next_gen.len() < self.params.population_size {
+                while children.len() < breeding_target {
                     let p1 = self.tournament_select(&population, &mut rng);
                     let p2 = self.tournament_select(&population, &mut rng);
 
@@ -108,10 +107,15 @@ impl GeneticAlgorithm {
                     if spatial::check_overlap(&child, &self.grid) {
                         child.status = ClusterStatus::Born;
                         child.generation = gen as u64;
-                        next_gen.push(child);
+                        children.push(child);
                     }
                 }
             }
+
+            // B. Elitism - Move from previous population to avoid cloning
+            let mut next_gen = Vec::with_capacity(self.params.population_size);
+            next_gen.extend(population.into_iter().take(self.params.elitism_count));
+            next_gen.extend(children);
 
             // C. Evaluation
             let evals_this_gen = self.evaluate_batch(&mut next_gen);
