@@ -65,17 +65,12 @@ impl GeneticAlgorithm {
         for gen in 1..=self.params.max_steps {
             let gen_start = Instant::now();
 
-            // A. Elitism
-            let mut next_gen = Vec::with_capacity(self.params.population_size);
-            let elites = population.iter()
-                .take(self.params.elitism_count)
-                .cloned()
-                .collect::<Vec<_>>();
-            next_gen.extend(elites);
+            // A. Breeding
+            let mut children = Vec::with_capacity(self.params.population_size);
+            let breeding_target = self.params.population_size.saturating_sub(self.params.elitism_count);
 
-            // B. Breeding
             if !population.is_empty() {
-                while next_gen.len() < self.params.population_size {
+                while children.len() < breeding_target {
                     let p1 = self.tournament_select(&population, &mut rng);
                     let p2 = self.tournament_select(&population, &mut rng);
 
@@ -105,10 +100,15 @@ impl GeneticAlgorithm {
                     if spatial::check_overlap(&child, &self.grid) {
                         child.status = ClusterStatus::Born;
                         child.generation = gen as u64;
-                        next_gen.push(child);
+                        children.push(child);
                     }
                 }
             }
+
+            // B. Elitism - Move from previous population to avoid cloning
+            let mut next_gen = Vec::with_capacity(self.params.population_size);
+            next_gen.extend(population.into_iter().take(self.params.elitism_count));
+            next_gen.extend(children);
 
             // C. Evaluation
             let evals_this_gen = self.evaluate_batch(&mut next_gen);
@@ -139,23 +139,24 @@ impl GeneticAlgorithm {
                 let mut refill = Vec::with_capacity(needed);
                 
                 // Cycle through survivors (Best -> Worst -> Best...)
-                let source_pool = unique_pop.clone();
-                let mut source_iter = source_pool.iter().cycle();
+                {
+                    let mut source_iter = unique_pop.iter().cycle();
 
-                while refill.len() < needed {
-                    if let Some(parent) = source_iter.next() {
-                        // Apply HEAVY mutation to force it into a new topological basin
-                        // Twist + Rotate + Rattle
-                        let mut child = Mutator::new()
-                            .rotate(3.14)   // Full rotation potential
-                            .twist(0.5)     // Significant twist
-                            .rattle(0.2)    // Shake atoms
-                            .apply(parent, &mut rng);
-                        
-                        child.origin = "Refill".to_string();
-                        child.status = ClusterStatus::Born;
-                        child.energy = None; // Force re-eval
-                        refill.push(child);
+                    while refill.len() < needed {
+                        if let Some(parent) = source_iter.next() {
+                            // Apply HEAVY mutation to force it into a new topological basin
+                            // Twist + Rotate + Rattle
+                            let mut child = Mutator::new()
+                                .rotate(3.14)   // Full rotation potential
+                                .twist(0.5)     // Significant twist
+                                .rattle(0.2)    // Shake atoms
+                                .apply(parent, &mut rng);
+
+                            child.origin = "Refill".to_string();
+                            child.status = ClusterStatus::Born;
+                            child.energy = None; // Force re-eval
+                            refill.push(child);
+                        }
                     }
                 }
 
