@@ -1,0 +1,14 @@
+/Users/gokayavci/Desktop/1_surface_SAINT/1_tui_based_sims/target/release/deps/serde-faf13fa9a6d2fd81.d: /Users/gokayavci/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/gokayavci/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/gokayavci/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/gokayavci/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/gokayavci/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/gokayavci/Desktop/1_surface_SAINT/1_tui_based_sims/target/release/build/serde-1271ce5b4ecddfd5/out/private.rs
+
+/Users/gokayavci/Desktop/1_surface_SAINT/1_tui_based_sims/target/release/deps/libserde-faf13fa9a6d2fd81.rlib: /Users/gokayavci/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/gokayavci/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/gokayavci/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/gokayavci/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/gokayavci/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/gokayavci/Desktop/1_surface_SAINT/1_tui_based_sims/target/release/build/serde-1271ce5b4ecddfd5/out/private.rs
+
+/Users/gokayavci/Desktop/1_surface_SAINT/1_tui_based_sims/target/release/deps/libserde-faf13fa9a6d2fd81.rmeta: /Users/gokayavci/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/gokayavci/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/gokayavci/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/gokayavci/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/gokayavci/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/gokayavci/Desktop/1_surface_SAINT/1_tui_based_sims/target/release/build/serde-1271ce5b4ecddfd5/out/private.rs
+
+/Users/gokayavci/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/Users/gokayavci/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/Users/gokayavci/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/Users/gokayavci/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/Users/gokayavci/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/Users/gokayavci/Desktop/1_surface_SAINT/1_tui_based_sims/target/release/build/serde-1271ce5b4ecddfd5/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/gokayavci/Desktop/1_surface_SAINT/1_tui_based_sims/target/release/build/serde-1271ce5b4ecddfd5/out
