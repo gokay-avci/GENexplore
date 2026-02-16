@@ -16,8 +16,8 @@ use crossterm::{
 };
 use ratatui::{backend::CrosstermBackend, Terminal};
 
-use klmc_ultimate::core::domain::{AlgorithmType, Cluster, Params, Species, SystemDefinition};
 use klmc_ultimate::core::chemistry::InteractionGrid;
+use klmc_ultimate::core::domain::{AlgorithmType, Cluster, Params, Species, SystemDefinition};
 use klmc_ultimate::engine::evaluator::Evaluator;
 use klmc_ultimate::engine::external::gulp::GulpEvaluator;
 use klmc_ultimate::interface::state::AppState;
@@ -169,16 +169,16 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // 2. Pre-flight Checks
     if let Err(e) = check_dependencies() {
-        eprintln!("{}", e); 
+        eprintln!("{}", e);
         std::process::exit(1);
     }
 
     // 3. Initialize System
     let system = create_default_system(&args);
-    
+
     // 4. Initialize Physics Components
     let grid = Arc::new(InteractionGrid::new(&system.species, 0.75));
-    
+
     // Evaluator: GULP wrapper
     // We define the Buckingham potential string here
     let species_map = system.species.clone();
@@ -189,9 +189,12 @@ O core O core 22764.0 0.149 27.88 0.0 10.0
 spring
 Mg 0.0
 O 0.0
-    "#.trim().to_string();
+    "#
+    .trim()
+    .to_string();
 
-    let evaluator: Arc<dyn Evaluator> = Arc::new(GulpEvaluator::new("gulp", &potentials, species_map));
+    let evaluator: Arc<dyn Evaluator> =
+        Arc::new(GulpEvaluator::new("gulp", &potentials, species_map));
 
     // 5. Setup TUI & App State
     let mut tui = TuiContext::new().context("Failed to initialize TUI")?;
@@ -223,10 +226,11 @@ O 0.0
                     // Generate a valid starting cluster with correct stoichiometry
                     let start_cluster = Cluster::new_random(
                         &params_clone.atom_counts, // Pass ref to Vec<usize>
-                        params_clone.box_size, 
-                        &grid_clone, 
-                        &mut rng
-                    ).unwrap_or_else(|| Cluster::new("Fallback_Empty"));
+                        params_clone.box_size,
+                        &grid_clone,
+                        &mut rng,
+                    )
+                    .unwrap_or_else(|| Cluster::new("Fallback_Empty"));
 
                     let solver = BasinHopping::new(eval_clone, grid_clone, params_clone);
                     solver.solve(start_cluster, tx);

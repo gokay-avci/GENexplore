@@ -1,11 +1,11 @@
-use klmc_ultimate::core::domain::{Params, AlgorithmType, Cluster, Species};
-use klmc_ultimate::core::chemistry::InteractionGrid;
-use klmc_ultimate::solvers::ga::GeneticAlgorithm;
-use klmc_ultimate::solvers::bh::BasinHopping;
-use klmc_ultimate::solvers::SolverEvent;
-use crossbeam_channel::unbounded;
-use std::sync::Arc;
 use crate::common::MockEvaluator;
+use crossbeam_channel::unbounded;
+use klmc_ultimate::core::chemistry::InteractionGrid;
+use klmc_ultimate::core::domain::{AlgorithmType, Cluster, Params, Species};
+use klmc_ultimate::solvers::bh::BasinHopping;
+use klmc_ultimate::solvers::ga::GeneticAlgorithm;
+use klmc_ultimate::solvers::SolverEvent;
+use std::sync::Arc;
 
 mod common;
 
@@ -21,8 +21,16 @@ fn test_ga_flow() {
     };
 
     let species = vec![
-        Species { symbol: "A".into(), radius_covalent: 0.5, ..Default::default() },
-        Species { symbol: "B".into(), radius_covalent: 0.5, ..Default::default() },
+        Species {
+            symbol: "A".into(),
+            radius_covalent: 0.5,
+            ..Default::default()
+        },
+        Species {
+            symbol: "B".into(),
+            radius_covalent: 0.5,
+            ..Default::default()
+        },
     ];
     let grid = Arc::new(InteractionGrid::new(&species, 0.5));
     let evaluator = Arc::new(MockEvaluator);
@@ -58,8 +66,16 @@ fn test_bh_flow() {
     };
 
     let species = vec![
-        Species { symbol: "A".into(), radius_covalent: 0.5, ..Default::default() },
-        Species { symbol: "B".into(), radius_covalent: 0.5, ..Default::default() },
+        Species {
+            symbol: "A".into(),
+            radius_covalent: 0.5,
+            ..Default::default()
+        },
+        Species {
+            symbol: "B".into(),
+            radius_covalent: 0.5,
+            ..Default::default()
+        },
     ];
     let grid = Arc::new(InteractionGrid::new(&species, 0.5));
     let evaluator = Arc::new(MockEvaluator);

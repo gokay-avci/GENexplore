@@ -1,10 +1,10 @@
-use std::collections::VecDeque;
-use std::time::{Duration, Instant};
 use crossbeam_channel::{Receiver, TryRecvError};
 use ratatui::widgets::TableState;
+use std::collections::VecDeque;
+use std::time::{Duration, Instant};
 
 use crate::core::domain::{Cluster, Params};
-use crate::solvers::{SolverEvent, GenStats};
+use crate::solvers::{GenStats, SolverEvent};
 
 // --- Constants ---
 const HISTORY_CAPACITY: usize = 1000;
@@ -39,9 +39,9 @@ pub struct Telemetry {
     // History Queues for Sparklines
     pub best_energy_history: VecDeque<(f64, f64)>, // (Iter, Energy)
     pub avg_energy_history: VecDeque<(f64, f64)>,
-    pub diversity_history: VecDeque<(f64, f64)>,   // (Iter, Diversity %)
-    pub mutation_history: VecDeque<(f64, f64)>,    // (Iter, Rate)
-    
+    pub diversity_history: VecDeque<(f64, f64)>, // (Iter, Diversity %)
+    pub mutation_history: VecDeque<(f64, f64)>,  // (Iter, Rate)
+
     // Global Bounds for Chart Scaling
     pub global_min_energy: f64,
     pub global_max_energy: f64,
@@ -69,8 +69,12 @@ impl Telemetry {
         }
 
         // Update Bounds
-        if stats.best_energy < self.global_min_energy { self.global_min_energy = stats.best_energy; }
-        if stats.worst_energy > self.global_max_energy { self.global_max_energy = stats.worst_energy; }
+        if stats.best_energy < self.global_min_energy {
+            self.global_min_energy = stats.best_energy;
+        }
+        if stats.worst_energy > self.global_max_energy {
+            self.global_max_energy = stats.worst_energy;
+        }
 
         // Sanity check for first point to prevent chart crash on zero range
         if (self.global_max_energy - self.global_min_energy).abs() < 1e-6 {
@@ -79,10 +83,11 @@ impl Telemetry {
         }
 
         let x = stats.generation as f64;
-        
+
         self.best_energy_history.push_back((x, stats.best_energy));
         self.avg_energy_history.push_back((x, stats.avg_energy));
-        self.diversity_history.push_back((x, stats.diversity * 100.0));
+        self.diversity_history
+            .push_back((x, stats.diversity * 100.0));
         self.mutation_history.push_back((x, stats.mutation_rate));
     }
 }
@@ -127,26 +132,26 @@ pub struct AppState {
     pub should_quit: bool,
     pub mode: AppMode,
     pub params: Params,
-    
+
     // Worker
-    pub rx: Option<Receiver<SolverEvent>>, 
+    pub rx: Option<Receiver<SolverEvent>>,
     pub worker_status: WorkerStatus,
-    
+
     // Simulation Data
     pub total_iterations: usize,
     pub start_time: Instant,
     pub current_best: Option<Cluster>,
-    pub hall_of_fame: Vec<Cluster>, 
-    pub active_cluster: Option<Cluster>, 
-    
+    pub hall_of_fame: Vec<Cluster>,
+    pub active_cluster: Option<Cluster>,
+
     // Analytics
     pub telemetry: Telemetry,
     pub logs: VecDeque<String>,
-    
+
     // UI Elements
     pub hof_state: TableState,
     pub viewport: Viewport,
-    
+
     // Performance Metrics
     pub ops_counter: usize,
     pub ops_per_second: f64,
@@ -209,22 +214,24 @@ impl AppState {
     fn handle_event(&mut self, event: SolverEvent) {
         match event {
             SolverEvent::Log(msg) => self.log(msg),
-            
+
             SolverEvent::WorkerHeartbeat(ops) => {
                 self.worker_status = WorkerStatus::Running;
-                if ops > 0.0 { self.ops_per_second = ops; }
-            },
+                if ops > 0.0 {
+                    self.ops_per_second = ops;
+                }
+            }
 
             SolverEvent::GenerationUpdate(stats) => {
                 self.worker_status = WorkerStatus::Running;
                 self.total_iterations = stats.generation;
                 self.ops_counter += stats.valid_count;
                 self.telemetry.ingest(&stats);
-            },
+            }
 
             SolverEvent::NewBest(cluster) => {
                 self.handle_new_best(cluster);
-            },
+            }
 
             SolverEvent::Finished => {
                 self.worker_status = WorkerStatus::Finished;
@@ -235,11 +242,11 @@ impl AppState {
 
     fn handle_new_best(&mut self, cluster: Cluster) {
         let e_new = cluster.energy.unwrap_or(0.0);
-        
+
         // 1. Update Global Record
         let is_global = match &self.current_best {
             Some(curr) => e_new < curr.energy.unwrap_or(f64::MAX),
-            None => true
+            None => true,
         };
 
         if is_global {
@@ -249,9 +256,9 @@ impl AppState {
 
         // 2. Hall of Fame Deduplication (Isomer Check)
         let mut replaced = false;
-        
+
         let new_hash = cluster.hash_key.as_deref().unwrap_or("INVALID");
-        
+
         if new_hash != "INVALID" && new_hash != "NAN_COORDS" {
             for existing in &mut self.hall_of_fame {
                 if let Some(ex_hash) = &existing.hash_key {
@@ -263,7 +270,7 @@ impl AppState {
                             *existing = cluster.clone();
                         }
                         replaced = true;
-                        break; 
+                        break;
                     }
                 }
             }
@@ -272,14 +279,16 @@ impl AppState {
         // If not a duplicate (or we allow duplicates due to bad hash), insert and sort
         if !replaced {
             self.hall_of_fame.push(cluster.clone());
-            self.hall_of_fame.sort_by(|a, b| 
-                a.energy.partial_cmp(&b.energy).unwrap_or(std::cmp::Ordering::Equal)
-            );
+            self.hall_of_fame.sort_by(|a, b| {
+                a.energy
+                    .partial_cmp(&b.energy)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
             if self.hall_of_fame.len() > HOF_CAPACITY {
                 self.hall_of_fame.truncate(HOF_CAPACITY);
             }
         }
-        
+
         // Auto-select for visualization
         self.active_cluster = Some(cluster);
     }
@@ -304,7 +313,7 @@ impl AppState {
     }
 
     // --- Input Handling ---
-    
+
     pub fn on_key(&mut self, key: char) {
         match key {
             'q' => self.should_quit = true,
@@ -321,9 +330,17 @@ impl AppState {
     }
 
     fn select_next_hof(&mut self) {
-        if self.hall_of_fame.is_empty() { return; }
+        if self.hall_of_fame.is_empty() {
+            return;
+        }
         let i = match self.hof_state.selected() {
-            Some(i) => if i >= self.hall_of_fame.len() - 1 { 0 } else { i + 1 },
+            Some(i) => {
+                if i >= self.hall_of_fame.len() - 1 {
+                    0
+                } else {
+                    i + 1
+                }
+            }
             None => 0,
         };
         self.hof_state.select(Some(i));
@@ -331,9 +348,17 @@ impl AppState {
     }
 
     fn select_prev_hof(&mut self) {
-        if self.hall_of_fame.is_empty() { return; }
+        if self.hall_of_fame.is_empty() {
+            return;
+        }
         let i = match self.hof_state.selected() {
-            Some(i) => if i == 0 { self.hall_of_fame.len() - 1 } else { i - 1 },
+            Some(i) => {
+                if i == 0 {
+                    self.hall_of_fame.len() - 1
+                } else {
+                    i - 1
+                }
+            }
             None => 0,
         };
         self.hof_state.select(Some(i));
@@ -345,11 +370,11 @@ impl AppState {
             WorkerStatus::Running => {
                 self.worker_status = WorkerStatus::Paused;
                 self.log("Paused.");
-            },
+            }
             WorkerStatus::Paused => {
                 self.worker_status = WorkerStatus::Running;
                 self.log("Resumed.");
-            },
+            }
             _ => {}
         }
     }

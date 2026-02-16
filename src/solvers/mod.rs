@@ -11,10 +11,10 @@ pub struct GenStats {
     pub diversity: f64,     // 0.0 to 1.0 (Unique Isomers / Population Size)
     pub valid_count: usize, // Number of structures that passed geometry + GULP checks
     pub pop_size: usize,    // Total active population size
-    
+
     /// The current mutation rate being applied.
     /// Allows the UI to visualize adaptive strategies (e.g. Hyper-Mutation spikes).
-    pub mutation_rate: f64, 
+    pub mutation_rate: f64,
 }
 
 impl Default for GenStats {
@@ -37,7 +37,7 @@ impl Default for GenStats {
 pub enum SolverEvent {
     /// Diagnostic log message.
     Log(String),
-    
+
     /// High-level heartbeat for async diagnostics (e.g., "Worker is alive").
     /// Contains (ops_per_sec estimate from worker perspective).
     WorkerHeartbeat(f64),

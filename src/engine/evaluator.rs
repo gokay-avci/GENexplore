@@ -18,7 +18,7 @@ pub struct EvaluationResult {
 pub trait Evaluator: Send + Sync {
     /// Takes a raw cluster, relaxes it, and returns the result.
     fn evaluate(&self, cluster: &Cluster) -> Result<EvaluationResult>;
-    
+
     /// Returns the name of the engine (e.g., "GULP 6.1").
     fn name(&self) -> &str;
 }

@@ -1,8 +1,11 @@
-use crate::core::domain::{Cluster, Atom};
+use crate::core::domain::{Atom, Cluster};
 use crate::core::spatial;
-use nalgebra::{Vector3, Rotation3, Unit};
-use rand::Rng;
+use nalgebra::{Rotation3, Unit, Vector3};
 use rand::seq::SliceRandom;
+use rand::Rng;
+
+/// Internal scaling factor for the twist mutation.
+const TWIST_AXIS_SCALE: f64 = 2.0;
 
 /// A composable mutation builder.
 #[derive(Clone, Debug)]
@@ -59,8 +62,8 @@ impl Mutator {
 
     pub fn apply(&self, cluster: &Cluster, rng: &mut impl Rng) -> Cluster {
         let mut c = cluster.clone();
-        c.origin = "Mutation".to_string(); 
-        
+        c.origin = "Mutation".to_string();
+
         spatial::wrap_or_center(&mut c);
 
         // 1. Breathing (Global Scaling)
@@ -88,7 +91,7 @@ impl Mutator {
 
         // 3. Twist
         if let Some(mag) = self.twist_intensity {
-            let axis_z = 2.0; 
+            let axis_z = TWIST_AXIS_SCALE;
             for atom in &mut c.atoms {
                 let theta = atom.position.z * axis_z * mag * (rng.gen::<f64>() - 0.5);
                 let (sin, cos) = theta.sin_cos();
@@ -146,45 +149,65 @@ impl Mutator {
 /// Rotates a set of atoms randomly around their geometric center.
 /// Defined as a generic function to avoid `dyn Rng` object safety issues.
 fn apply_random_rotation<R: Rng + ?Sized>(atoms: &mut [Atom], rng: &mut R) {
-    if atoms.is_empty() { return; }
+    if atoms.is_empty() {
+        return;
+    }
 
     // Center manually
     let mut com = Vector3::zeros();
-    for a in atoms.iter() { com += a.position.coords; }
+    for a in atoms.iter() {
+        com += a.position.coords;
+    }
     com /= atoms.len() as f64;
-    for a in atoms.iter_mut() { a.position -= com; }
+    for a in atoms.iter_mut() {
+        a.position -= com;
+    }
 
     // Rotate
     let axis = Unit::new_normalize(Vector3::new(
-        rng.gen::<f64>() - 0.5, rng.gen::<f64>() - 0.5, rng.gen::<f64>() - 0.5
+        rng.gen::<f64>() - 0.5,
+        rng.gen::<f64>() - 0.5,
+        rng.gen::<f64>() - 0.5,
     ));
     let angle = rng.gen_range(0.0..6.28);
     let rot = Rotation3::from_axis_angle(&axis, angle);
-    
-    for a in atoms.iter_mut() { a.position = rot * a.position; }
+
+    for a in atoms.iter_mut() {
+        a.position = rot * a.position;
+    }
 }
 
 /// Robust "Cut and Splice" Crossover.
 pub fn crossover_cut_splice(p1: &Cluster, p2: &Cluster, rng: &mut impl Rng) -> Option<Cluster> {
-    if p1.atoms.len() != p2.atoms.len() { return None; }
+    if p1.atoms.len() != p2.atoms.len() {
+        return None;
+    }
     let n = p1.atoms.len();
-    if n < 2 { return None; }
+    if n < 2 {
+        return None;
+    }
 
     // Target Stoichiometry (Source of Truth)
     let max_id = p1.atoms.iter().map(|a| a.element_id).max().unwrap_or(0);
     let mut target_counts = vec![0; max_id + 1];
-    for a in &p1.atoms { target_counts[a.element_id] += 1; }
+    for a in &p1.atoms {
+        target_counts[a.element_id] += 1;
+    }
 
     let mut child = p1.clone();
-    child.origin = format!("X({},{})", p1.id.to_string()[0..4].to_string(), p2.id.to_string()[0..4].to_string());
-    
+    child.origin = format!(
+        "X({},{})",
+        p1.id.to_string()[0..4].to_string(),
+        p2.id.to_string()[0..4].to_string()
+    );
+
     // 1. Prepare Parents (Clone -> Center -> Rotate)
     let mut p1_atoms = p1.atoms.clone();
     let mut p2_atoms = p2.atoms.clone();
 
     apply_random_rotation(&mut p1_atoms, rng);
     apply_random_rotation(&mut p2_atoms, rng);
-    
+
     // 2. Sort by Z
     p1_atoms.sort_by(|a, b| a.position.z.partial_cmp(&b.position.z).unwrap());
     p2_atoms.sort_by(|a, b| a.position.z.partial_cmp(&b.position.z).unwrap());
@@ -192,22 +215,26 @@ pub fn crossover_cut_splice(p1: &Cluster, p2: &Cluster, rng: &mut impl Rng) -> O
     // 3. Cut
     // range 1..n ensures at least 1 atom from P1 and 1 from P2
     let cut_point = rng.gen_range(1..n);
-    
+
     child.atoms.clear();
     child.atoms.extend_from_slice(&p1_atoms[0..cut_point]);
     child.atoms.extend_from_slice(&p2_atoms[cut_point..n]);
-    
+
     // 4. Repair Stoichiometry (Alchemy)
     let mut child_counts = vec![0; max_id + 1];
-    for a in &child.atoms { 
-        if a.element_id < child_counts.len() { child_counts[a.element_id] += 1; } 
+    for a in &child.atoms {
+        if a.element_id < child_counts.len() {
+            child_counts[a.element_id] += 1;
+        }
     }
 
     let mut deficits = Vec::new();
     for (id, &tgt) in target_counts.iter().enumerate() {
         let curr = child_counts.get(id).copied().unwrap_or(0);
         if curr < tgt {
-            for _ in 0..(tgt - curr) { deficits.push(id); }
+            for _ in 0..(tgt - curr) {
+                deficits.push(id);
+            }
         }
     }
     deficits.shuffle(rng);
@@ -216,12 +243,15 @@ pub fn crossover_cut_splice(p1: &Cluster, p2: &Cluster, rng: &mut impl Rng) -> O
         let curr = child_counts.get(id).copied().unwrap_or(0);
         if curr > tgt {
             let surplus = curr - tgt;
-            let mut indices: Vec<usize> = child.atoms.iter().enumerate()
+            let mut indices: Vec<usize> = child
+                .atoms
+                .iter()
+                .enumerate()
                 .filter(|(_, a)| a.element_id == id)
                 .map(|(i, _)| i)
                 .collect();
             indices.shuffle(rng);
-            
+
             for i in 0..surplus {
                 if let Some(target_idx) = indices.get(i) {
                     if let Some(new_id) = deficits.pop() {

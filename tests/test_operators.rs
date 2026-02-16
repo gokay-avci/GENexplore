@@ -1,5 +1,5 @@
-use klmc_ultimate::core::domain::{Cluster, Atom};
-use klmc_ultimate::engine::operators::{Mutator, crossover_cut_splice};
+use klmc_ultimate::core::domain::{Atom, Cluster};
+use klmc_ultimate::engine::operators::{crossover_cut_splice, Mutator};
 use nalgebra::{Point3, Vector3};
 use rand::thread_rng;
 
@@ -48,4 +48,32 @@ fn test_crossover() {
     let count1 = c.atoms.iter().filter(|a| a.element_id == 1).count();
     assert_eq!(count0, 2);
     assert_eq!(count1, 2);
+}
+
+#[test]
+fn test_mutation_twist() {
+    let mut c = create_dummy_cluster(4);
+    // Give atoms some Z displacement to make the twist effective
+    for (i, atom) in c.atoms.iter_mut().enumerate() {
+        atom.position.z = i as f64;
+        atom.position.x = 1.0;
+        atom.position.y = 1.0;
+    }
+    let mut rng = thread_rng();
+
+    // Twist should change positions
+    let mutated = Mutator::new().twist(1.0).apply(&c, &mut rng);
+
+    for i in 0..c.atoms.len() {
+        // If z=0, twist does nothing because theta = z * ...
+        if c.atoms[i].position.z.abs() > 1e-9 {
+            let p_orig = c.atoms[i].position;
+            let p_new = mutated.atoms[i].position;
+
+            // X or Y should change
+            assert!((p_orig.x - p_new.x).abs() > 1e-9 || (p_orig.y - p_new.y).abs() > 1e-9);
+            // Z should NOT change
+            assert!((p_orig.z - p_new.z).abs() < 1e-9);
+        }
+    }
 }

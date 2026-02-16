@@ -8,7 +8,7 @@ pub struct InteractionGrid {
     num_species: usize,
     /// Stores (radius_i + radius_j)^2 * limit_factor
     /// We store squared values to avoid sqrt() calls during simulation.
-    collision_matrix_sq: Vec<f64>, 
+    collision_matrix_sq: Vec<f64>,
 }
 
 impl InteractionGrid {
@@ -20,15 +20,15 @@ impl InteractionGrid {
 
         for i in 0..n {
             for j in 0..n {
-                // Determine which radius to use. 
+                // Determine which radius to use.
                 // KLMC logic: if same species -> covalent, else -> ionic (heuristic).
                 // Here we default to covalent for collision checks to be strict.
                 let r_i = species[i].radius_covalent;
                 let r_j = species[j].radius_covalent;
-                
+
                 let dist = r_i + r_j;
                 let threshold = dist * covalent_scale;
-                
+
                 // Store squared threshold
                 grid[i * n + j] = threshold * threshold;
             }

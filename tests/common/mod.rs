@@ -1,6 +1,6 @@
 use anyhow::Result;
 use klmc_ultimate::core::domain::Cluster;
-use klmc_ultimate::engine::evaluator::{Evaluator, EvaluationResult};
+use klmc_ultimate::engine::evaluator::{EvaluationResult, Evaluator};
 
 pub struct MockEvaluator;
 
@@ -20,5 +20,7 @@ impl Evaluator for MockEvaluator {
         })
     }
 
-    fn name(&self) -> &str { "Mock Evaluator" }
+    fn name(&self) -> &str {
+        "Mock Evaluator"
+    }
 }

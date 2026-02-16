@@ -1,6 +1,6 @@
-use nalgebra::{Point3, Vector3};
-use crate::core::domain::{Cluster, Lattice};
 use crate::core::chemistry::InteractionGrid;
+use crate::core::domain::{Cluster, Lattice};
+use nalgebra::{Point3, Vector3};
 
 /// Calculates the squared distance between two points.
 /// If `lattice` is provided, applies Minimum Image Convention (MIC).
@@ -42,7 +42,7 @@ pub fn check_overlap(cluster: &Cluster, grid: &InteractionGrid) -> bool {
 
             // Get the squared threshold for this pair
             let threshold_sq = grid.get_collision_sq(a_i.element_id, a_j.element_id);
-            
+
             // Calculate actual squared separation
             let dist_sq = distance_sq(&a_i.position, &a_j.position, lattice);
 
@@ -55,10 +55,10 @@ pub fn check_overlap(cluster: &Cluster, grid: &InteractionGrid) -> bool {
 }
 
 /// Moves a point into the primary unit cell (Periodic only) or centers it (0D).
-/// 
+///
 /// For 3D (Periodic): Wraps atoms into [0, 1) fractional box.
 /// For 0D (Cluster): Centers the geometric center to (0,0,0).
-/// 
+///
 /// **Invariant**: Modifies positions in-place. Does NOT reorder atoms.
 pub fn wrap_or_center(cluster: &mut Cluster) {
     if let Some(lat) = &cluster.lattice {
@@ -73,8 +73,10 @@ pub fn wrap_or_center(cluster: &mut Cluster) {
     } else {
         // 0D: Center of Geometry to (0,0,0)
         let n = cluster.atoms.len() as f64;
-        
-        if n == 0.0 { return; }
+
+        if n == 0.0 {
+            return;
+        }
 
         let mut center = Vector3::zeros();
         for atom in &cluster.atoms {

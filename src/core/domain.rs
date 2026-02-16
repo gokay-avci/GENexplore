@@ -1,8 +1,8 @@
-use nalgebra::{Point3, Vector3, Matrix3};
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use nalgebra::{Matrix3, Point3, Vector3};
+use rand::seq::SliceRandom;
 use rand::Rng;
-use rand::seq::SliceRandom; // Required for shuffling species
+use serde::{Deserialize, Serialize};
+use uuid::Uuid; // Required for shuffling species
 
 // --- Constants ---
 pub const MAX_HISTORY: usize = 50;
@@ -14,10 +14,10 @@ pub const MAX_HISTORY: usize = 50;
 pub struct Species {
     pub symbol: String,
     pub atomic_number: u8,
-    pub mass: f64,             // amu
-    pub charge: f64,           // e
-    pub radius_covalent: f64,  // Å
-    pub radius_ionic: f64,     // Å
+    pub mass: f64,               // amu
+    pub charge: f64,             // e
+    pub radius_covalent: f64,    // Å
+    pub radius_ionic: f64,       // Å
     pub color_rgb: (u8, u8, u8), // For TUI visualization
 }
 
@@ -58,7 +58,7 @@ impl Lattice {
         let inverse = vectors.try_inverse()?;
         Some(Self { vectors, inverse })
     }
-    
+
     pub fn to_fractional(&self, p: &Point3<f64>) -> Point3<f64> {
         let v = self.inverse * p.coords;
         Point3::from(v)
@@ -74,11 +74,11 @@ impl Lattice {
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum ClusterStatus {
-    Born,        // Just created
-    Valid,       // Checks passed
-    Evaluated,   // Physics engine returned energy
-    Discarded,   // Failed
-    Elite,       // Hall of Fame
+    Born,      // Just created
+    Valid,     // Checks passed
+    Evaluated, // Physics engine returned energy
+    Discarded, // Failed
+    Elite,     // Hall of Fame
 }
 
 /// The primary data unit passed between Solver and TUI.
@@ -87,15 +87,15 @@ pub struct Cluster {
     pub id: Uuid,
     pub generation: u64,
     pub origin: String,
-    
+
     pub atoms: Vec<Atom>,
     pub lattice: Option<Lattice>,
-    
+
     pub energy: Option<f64>,
     pub gradient_norm: Option<f64>,
     pub pmoi: Option<Vector3<f64>>,
     pub hash_key: Option<String>,
-    
+
     pub status: ClusterStatus,
 }
 
@@ -116,7 +116,7 @@ impl Cluster {
     }
 
     /// Tries to generate a random cluster respecting stoichiometry constraints.
-    /// 
+    ///
     /// # Arguments
     /// * `atom_counts`: A slice where index `i` is the count of species `i`.
     ///   Example: `[6, 6]` for 6 Mg and 6 O.
@@ -127,7 +127,7 @@ impl Cluster {
         rng: &mut R,
     ) -> Option<Self> {
         let mut c = Cluster::new("Random");
-        
+
         // 1. Build the exact multiset of element IDs required.
         let mut elements_to_place = Vec::new();
         for (id, &count) in atom_counts.iter().enumerate() {
@@ -135,14 +135,14 @@ impl Cluster {
                 elements_to_place.push(id);
             }
         }
-        
+
         // 2. Shuffle to randomize initial topology.
         elements_to_place.shuffle(rng);
 
         // 3. Place atoms (Random Sequential Adsorption)
         for &elem_id in &elements_to_place {
             let mut placed = false;
-            
+
             // Attempt 100 times to place an atom without overlap
             for _ in 0..100 {
                 let pos = Point3::new(
@@ -150,7 +150,7 @@ impl Cluster {
                     rng.gen_range(-box_size..box_size),
                     rng.gen_range(-box_size..box_size),
                 );
-                
+
                 // Check overlap with already placed atoms
                 let mut clash = false;
                 for existing in &c.atoms {
@@ -158,13 +158,13 @@ impl Cluster {
                     // Simple euclidean check for generation (0D logic)
                     // TODO: If 3D PBC generation is needed, wrap logic goes here.
                     let dist_sq = (pos - existing.position).norm_squared();
-                    
+
                     if dist_sq < limit_sq {
                         clash = true;
                         break;
                     }
                 }
-                
+
                 if !clash {
                     c.atoms.push(Atom {
                         element_id: elem_id,
@@ -177,15 +177,21 @@ impl Cluster {
                     break;
                 }
             }
-            if !placed { return None; } // Failed to pack
+            if !placed {
+                return None;
+            } // Failed to pack
         }
-        
+
         // Center the cluster
         if !c.atoms.is_empty() {
             let mut com = Vector3::zeros();
-            for a in &c.atoms { com += a.position.coords; }
+            for a in &c.atoms {
+                com += a.position.coords;
+            }
             com /= c.atoms.len() as f64;
-            for a in &mut c.atoms { a.position -= com; }
+            for a in &mut c.atoms {
+                a.position -= com;
+            }
         }
 
         Some(c)
@@ -195,14 +201,14 @@ impl Cluster {
     /// Returns true if counts match exactly.
     pub fn check_stoichiometry(&self, target_counts: &[usize]) -> bool {
         let mut actual_counts = vec![0; target_counts.len()];
-        
+
         for atom in &self.atoms {
             if atom.element_id >= actual_counts.len() {
                 return false; // Atom has invalid element_id
             }
             actual_counts[atom.element_id] += 1;
         }
-        
+
         actual_counts == target_counts
     }
 }
@@ -222,19 +228,19 @@ pub struct Params {
     pub algorithm: AlgorithmType,
     pub seed: u64,
     pub threads: usize,
-    
+
     // Physics Constraints
-    pub atom_count: usize, // Total atoms
+    pub atom_count: usize,       // Total atoms
     pub atom_counts: Vec<usize>, // Explicit counts per species (e.g., [6, 6])
     pub box_size: f64,
     pub min_distance: f64,
-    
+
     // GA Specific
     pub population_size: usize,
     pub mutation_rate: f64,
     pub crossover_rate: f64,
     pub elitism_count: usize,
-    
+
     // BH Specific
     pub temperature: f64,
     pub step_size: f64,
