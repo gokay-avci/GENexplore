@@ -16,21 +16,14 @@ use crossterm::{
 };
 use ratatui::{backend::CrosstermBackend, Terminal};
 
-// --- Module Declarations ---
-mod analysis;
-mod core;
-mod engine;
-mod interface;
-mod solvers;
-
-use crate::core::domain::{AlgorithmType, Cluster, Params, Species, SystemDefinition};
-use crate::core::chemistry::InteractionGrid;
-use crate::engine::evaluator::Evaluator;
-use crate::engine::external::gulp::GulpEvaluator;
-use crate::interface::state::AppState;
-use crate::interface::ui;
-use crate::solvers::bh::BasinHopping;
-use crate::solvers::ga::GeneticAlgorithm;
+use klmc_ultimate::core::domain::{AlgorithmType, Cluster, Params, Species, SystemDefinition};
+use klmc_ultimate::core::chemistry::InteractionGrid;
+use klmc_ultimate::engine::evaluator::Evaluator;
+use klmc_ultimate::engine::external::gulp::GulpEvaluator;
+use klmc_ultimate::interface::state::AppState;
+use klmc_ultimate::interface::ui;
+use klmc_ultimate::solvers::bh::BasinHopping;
+use klmc_ultimate::solvers::ga::GeneticAlgorithm;
 
 // --- CLI Definitions ---
 
@@ -145,7 +138,7 @@ fn create_default_system(args: &Args) -> SystemDefinition {
         elitism_count: 2,
         temperature: 300.0,
         step_size: 0.1,
-        bh_steps: 1000,
+        max_steps: 1000,
         ..Default::default()
     };
 

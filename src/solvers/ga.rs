@@ -29,7 +29,7 @@ impl GeneticAlgorithm {
     }
 
     pub fn solve(&self, tx: Sender<SolverEvent>) {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
         let mut rng = rand::thread_rng();
 
         // 1. Initialization Phase
@@ -62,7 +62,7 @@ impl GeneticAlgorithm {
         let mut current_mutation_rate = self.params.mutation_rate;
 
         // 2. Evolution Loop
-        for gen in 1..=self.params.bh_steps {
+        for gen in 1..=self.params.max_steps {
             let gen_start = Instant::now();
 
             // A. Elitism
@@ -208,7 +208,9 @@ impl GeneticAlgorithm {
                     }
                     
                     // Fill with TRUE randoms to reset the gene pool completely
-                    while population.len() < self.params.population_size {
+                    let mut attempts = 0;
+                    while population.len() < self.params.population_size && attempts < self.params.population_size * 100 {
+                        attempts += 1;
                         if let Some(mut r) = Cluster::new_random(
                             &self.params.atom_counts, 
                             self.params.box_size, 
@@ -335,8 +337,7 @@ impl GeneticAlgorithm {
 
     fn tournament_select<'a>(&self, pop: &'a [Cluster], rng: &mut impl Rng) -> &'a Cluster {
         if pop.is_empty() {
-            // Panic safety: should be handled by caller logic
-            return &pop[0]; // unreachable but safe for compiler
+            panic!("Tournament selection called on empty population");
         }
 
         let mut best = &pop[rng.gen_range(0..pop.len())];

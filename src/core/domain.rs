@@ -238,7 +238,7 @@ pub struct Params {
     // BH Specific
     pub temperature: f64,
     pub step_size: f64,
-    pub bh_steps: usize,
+    pub max_steps: usize,
 }
 
 impl Default for Params {
@@ -257,7 +257,7 @@ impl Default for Params {
             elitism_count: 2,
             temperature: 300.0,
             step_size: 0.1,
-            bh_steps: 100,
+            max_steps: 100,
         }
     }
 }
