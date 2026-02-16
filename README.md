@@ -53,10 +53,10 @@ Run the program using `cargo run` or the built binary.
 
 ```bash
 # Run Genetic Algorithm (Default) for MgO cluster with 12 atoms
-cargo run --release -- -a ga --atoms 12
+cargo run --release -- -a ga -n 12
 
 # Run Basin Hopping
-cargo run --release -- -a bh --atoms 12 --threads 8
+cargo run --release -- -a bh -n 12 --threads 8
 ```
 
 ### CLI Options

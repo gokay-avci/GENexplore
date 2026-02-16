@@ -35,7 +35,7 @@ struct Args {
     threads: usize,
 
     /// Number of atoms in the cluster
-    #[arg(short, long, default_value_t = 12)]
+    #[arg(short = 'n', long, default_value_t = 12)]
     atoms: usize,
 
     /// Algorithm to run (ga, bh)
